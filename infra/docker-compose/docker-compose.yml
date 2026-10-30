@@ -1,0 +1,328 @@
+name: mbs-poc
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: mbs-sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_AGENT_ENABLED: "true"
+      SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      - "11433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: mbs-kafka
+    restart: unless-stopped
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.1
+    container_name: mbs-schema-registry
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+    ports:
+      - "8081:8081"
+
+  kafka-connect:
+    build:
+      context: ../kafka-connect
+    image: mbs-kafka-connect:debezium-2.7-kafka-client-3.7.2
+    container_name: mbs-kafka-connect
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - schema-registry
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: mbs-connect-cluster
+      CONFIG_STORAGE_TOPIC: mbs_connect_configs
+      OFFSET_STORAGE_TOPIC: mbs_connect_offsets
+      STATUS_STORAGE_TOPIC: mbs_connect_statuses
+      CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      REST_ADVERTISED_HOST_NAME: kafka-connect
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx1g"
+    ports:
+      - "8083:8083"
+    volumes:
+      - ../kafka-connect/plugins/avro-converter:/kafka/connect/mbs-avro-converter
+      - ../kafka-connect/plugins/iceberg-sink:/kafka/connect/mbs-iceberg-sink
+
+  kafka-ui:
+    profiles: [dashboards]
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: mbs-kafka-ui
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - schema-registry
+      - kafka-connect
+    environment:
+      KAFKA_CLUSTERS_0_NAME: mbs-poc
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: mbs-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+    ports:
+      - "8080:8080"
+
+  minio:
+    image: minio/minio:latest
+    container_name: mbs-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  create-minio-bucket:
+    image: minio/mc:latest
+    container_name: mbs-minio-bucket-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}; do sleep 2; done;
+      mc mb --ignore-existing local/${MINIO_BUCKET};
+      mc anonymous set none local/${MINIO_BUCKET};
+      "
+
+  iceberg-rest:
+    image: tabulario/iceberg-rest:1.6.0
+    container_name: mbs-iceberg-rest
+    restart: unless-stopped
+    depends_on:
+      - minio
+      - create-minio-bucket
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: us-east-1
+      CATALOG_WAREHOUSE: ${ICEBERG_WAREHOUSE}
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_URI: "jdbc:sqlite:/catalog/catalog.db?busy_timeout=30000&journal_mode=WAL"
+      CATALOG_CLIENTS: "1"
+      CATALOG_S3_ENDPOINT: http://minio:9000
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+    volumes:
+      - iceberg-catalog-data:/catalog
+    ports:
+      - "8181:8181"
+
+  starrocks-fe:
+    image: starrocks/fe-ubuntu:4.0-latest
+    container_name: mbs-starrocks-fe
+    restart: unless-stopped
+    hostname: starrocks-fe
+    user: root
+    command:
+      - /bin/bash
+      - -c
+      - |
+        sed -i -E 's/-Xmx[0-9]+[mMgG]/-Xmx1024m/' /opt/starrocks/fe/conf/fe.conf
+        exec bash /opt/starrocks/fe/bin/start_fe.sh --host_type FQDN
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: us-east-1
+    ports:
+      - "8030:8030"
+      - "9020:9020"
+      - "9030:9030"
+    volumes:
+      - starrocks-fe-meta:/opt/starrocks/fe/meta
+      - starrocks-fe-log:/opt/starrocks/fe/log
+    healthcheck:
+      test: "mysql -u root -h 127.0.0.1 -P 9030 -e 'SHOW FRONTENDS\\G' | grep 'Alive: true'"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  starrocks-be:
+    image: starrocks/be-ubuntu:4.0-latest
+    container_name: mbs-starrocks-be
+    restart: unless-stopped
+    hostname: starrocks-be
+    user: root
+    depends_on:
+      starrocks-fe:
+        condition: service_healthy
+    command:
+      - /bin/bash
+      - -c
+      - |
+        ulimit -n 65535;
+        echo "# POC data cache settings" >> /opt/starrocks/be/conf/be.conf;
+        echo "block_cache_enable = true" >> /opt/starrocks/be/conf/be.conf;
+        echo "block_cache_mem_size = 536870912" >> /opt/starrocks/be/conf/be.conf;
+        echo "block_cache_disk_size = 1073741824" >> /opt/starrocks/be/conf/be.conf;
+        until mysql --connect-timeout 2 -h starrocks-fe -P 9030 -u root -e "SHOW FRONTENDS;"; do sleep 5; done;
+        mysql --connect-timeout 2 -h starrocks-fe -P 9030 -u root -e "ALTER SYSTEM ADD BACKEND \"starrocks-be:9050\";" || true;
+        bash /opt/starrocks/be/bin/start_be.sh
+    environment:
+      HOST_TYPE: FQDN
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: us-east-1
+    ports:
+      - "8040:8040"
+      - "9050:9050"
+      - "9060:9060"
+    volumes:
+      - starrocks-be-storage:/opt/starrocks/be/storage
+      - starrocks-be-log:/opt/starrocks/be/log
+    healthcheck:
+      test: "mysql -u root -h starrocks-fe -P 9030 -e 'SHOW BACKENDS\\G' | grep 'Alive: true'"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  airflow-db:
+    image: postgres:16-alpine
+    container_name: mbs-airflow-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: "pg_isready -U airflow -d airflow"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  airflow-init:
+    build:
+      context: ../airflow
+    image: mbs-airflow:local
+    container_name: mbs-airflow-init
+    depends_on:
+      airflow-db:
+        condition: service_healthy
+      starrocks-fe:
+        condition: service_healthy
+      starrocks-be:
+        condition: service_healthy
+      iceberg-rest:
+        condition: service_started
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: mbs-poc-local-airflow-secret
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+      - ../airflow/plugins:/opt/airflow/plugins
+      - ../../dbt:/opt/airflow/dbt
+      - airflow-logs:/opt/airflow/logs
+    command: >
+      bash -c "
+      airflow db migrate &&
+      airflow users create --role Admin --username admin --password admin --firstname MBS --lastname Admin --email admin@example.com || true
+      "
+
+  airflow-webserver:
+    profiles: [dashboards]
+    image: mbs-airflow:local
+    container_name: mbs-airflow-webserver
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__WORKERS: "1"
+      AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT: "600"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: mbs-poc-local-airflow-secret
+    ports:
+      - "8088:8080"
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+      - ../airflow/plugins:/opt/airflow/plugins
+      - ../../dbt:/opt/airflow/dbt
+      - airflow-logs:/opt/airflow/logs
+    command: airflow webserver
+    healthcheck:
+      test: "curl --fail http://localhost:8080/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  airflow-scheduler:
+    image: mbs-airflow:local
+    container_name: mbs-airflow-scheduler
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__PARALLELISM: "2"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: mbs-poc-local-airflow-secret
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+      - ../airflow/plugins:/opt/airflow/plugins
+      - ../../dbt:/opt/airflow/dbt
+      - airflow-logs:/opt/airflow/logs
+    command: airflow scheduler
+
+volumes:
+  sqlserver-data:
+  kafka-data:
+  minio-data:
+  iceberg-catalog-data:
+  starrocks-fe-meta:
+  starrocks-fe-log:
+  starrocks-be-storage:
+  starrocks-be-log:
+  airflow-db-data:
+  airflow-logs:

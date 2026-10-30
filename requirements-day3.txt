@@ -1,0 +1,2 @@
+confluent-kafka==2.6.1
+pyiceberg[pyarrow,s3fs]==0.8.1

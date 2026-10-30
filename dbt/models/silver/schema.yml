@@ -1,0 +1,98 @@
+version: 2
+
+models:
+  - name: silver_change_pincode_log
+    description: Latest known pincode-change log rows used to recover the first/original pincode per lead.
+    columns:
+      - name: id
+        tests:
+          - not_null
+          - unique
+      - name: ref_number
+        tests:
+          - not_null
+
+  - name: silver_customer_lead_consolidated
+    description: >
+      Recreates the Daily Operations Report customer lead consolidated view from active, ICICI,
+      archived, and purge lead tables.
+    columns:
+      - name: source_table
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Customer_Lead', 'Customer_Lead_ICICI', 'Customer_Lead_Archived', 'Customer_Lead_purge_details']
+      - name: customer_id
+        tests:
+          - not_null
+      - name: ref_number
+        tests:
+          - not_null
+      - name: is_active_arn
+        tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+
+  - name: silver_service_request_assign_log_consolidated
+    description: Recreates the consolidated service request assignment log view.
+    columns:
+      - name: source_table
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['ServiceRequestAssignLog', 'ServiceRequestAssignLog_archieved', 'ServiceRequestAssignLog_purge_details']
+      - name: order_number
+        tests:
+          - not_null
+
+  - name: silver_sr_status_update_log_consolidated
+    description: Recreates the consolidated SR status update log view, including active, archived, and purge logs.
+    columns:
+      - name: source_table
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['SRStatusUpdateLog', 'SRStatusUpdateLog_archieved', 'SRStatusUpdateLog_purge_details']
+      - name: log_id
+        tests:
+          - not_null
+      - name: order_number
+        tests:
+          - not_null
+
+  - name: silver_pincode_serviceability
+    description: Latest pincode serviceability lookup from MasPincode.
+    columns:
+      - name: pincode
+        tests:
+          - not_null
+
+  - name: silver_pincode_state_lookup
+    description: Latest pincode-to-state lookup from Mas_Pincode_For_MIS_HDFC.
+    columns:
+      - name: pincode
+        tests:
+          - not_null
+
+  - name: silver_campaign_leads
+    description: Campaign and appointment details from MstCampaignLeads for priority lead tagging.
+    columns:
+      - name: id
+        tests:
+          - not_null
+          - unique
+      - name: order_number
+        tests:
+          - not_null
+
+  - name: silver_mbs_user
+    description: >
+      Latest user master rows from MBSUser for agent and supervisor reporting attributes.
+      Encrypted source columns may remain unreadable unless the client provides decrypted values.
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+          - unique

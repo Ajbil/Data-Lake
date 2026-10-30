@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: gold_daily_operations_report
+    description: >
+      PowerBI-facing Daily Operations Report model matching the client report logic over
+      consolidated customer leads, assignment logs, status logs, serviceability, and campaigns.
+    columns:
+      - name: order_number
+        tests:
+          - not_null
+      - name: serviceable_pincode
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Serviceable', 'Non-Serviceable']
+      - name: record_type
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Fresh', 'RPush']
+      - name: champaines
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['High-priority', 'Non-priority']
+      - name: is_active_arn
+        tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1]

@@ -1,0 +1,22 @@
+{
+  "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+  "tasks.max": "1",
+  "topic.prefix": "${KAFKA_TOPIC_PREFIX}",
+  "database.hostname": "${MSSQL_HOST}",
+  "database.port": "${MSSQL_PORT}",
+  "database.user": "${MSSQL_DEBEZIUM_USER}",
+  "database.password": "${MSSQL_DEBEZIUM_PASSWORD}",
+  "database.names": "${MSSQL_CAPTURE_DATABASES}",
+  "table.include.list": "dbo.Customer_Lead,dbo.Customer_Lead_ICICI,dbo.ChangePincode_log,dbo.ServiceRequestAssignLog,dbo.SRStatusUpdateLog,dbo.MasPincode,dbo.Mas_Pincode_For_MIS_HDFC,dbo.MstCampaignLeads,dbo.MBSUser,dbo.Customer_Lead_Archived,dbo.Customer_Lead_purge_details,dbo.ServiceRequestAssignLog_archieved,dbo.ServiceRequestAssignLog_purge_details,dbo.SRStatusUpdateLog_archieved,dbo.SRStatusUpdateLog_purge_details",
+  "snapshot.mode": "initial",
+  "database.encrypt": "false",
+  "database.trustServerCertificate": "true",
+  "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
+  "schema.history.internal.kafka.topic": "schemahistory.${KAFKA_TOPIC_PREFIX}",
+  "include.schema.changes": "true",
+  "decimal.handling.mode": "string",
+  "time.precision.mode": "connect",
+  "tombstones.on.delete": "false",
+  "topic.creation.default.replication.factor": "1",
+  "topic.creation.default.partitions": "1"
+}

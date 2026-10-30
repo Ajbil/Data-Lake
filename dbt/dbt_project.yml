@@ -1,0 +1,22 @@
+name: mbs_poc
+version: "1.0.0"
+config-version: 2
+
+profile: mbs_poc
+
+model-paths:
+  - models
+macro-paths:
+  - macros
+
+clean-targets:
+  - target
+  - logs
+
+models:
+  mbs_poc:
+    +materialized: table
+    +pre-hook:
+      - "SET new_planner_optimize_timeout=30000"
+    +properties:
+      replication_num: "1"

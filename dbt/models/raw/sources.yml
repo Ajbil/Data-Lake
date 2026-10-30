@@ -1,0 +1,40 @@
+version: 2
+
+sources:
+  - name: raw_iceberg
+    description: >
+      Append-only Debezium CDC envelopes written by Kafka Connect into Iceberg
+      Raw tables on MinIO. dbt does not mutate this layer.
+    database: iceberg_catalog
+    schema: raw
+    tables:
+      - name: customer_lead_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.Customer_Lead.
+      - name: customer_lead_icici_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.Customer_Lead_ICICI.
+      - name: customer_lead_archived_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI_Archived.dbo.Customer_Lead_Archived.
+      - name: customer_lead_purge_details_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI_Archived.dbo.Customer_Lead_purge_details.
+      - name: change_pincode_log_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.ChangePincode_log.
+      - name: service_request_assign_log_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.ServiceRequestAssignLog.
+      - name: service_request_assign_log_archieved_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI_Archived.dbo.ServiceRequestAssignLog_archieved.
+      - name: service_request_assign_log_purge_details_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI_Archived.dbo.ServiceRequestAssignLog_purge_details.
+      - name: sr_status_update_log_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.SRStatusUpdateLog.
+      - name: sr_status_update_log_archieved_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI_Archived.dbo.SRStatusUpdateLog_archieved.
+      - name: sr_status_update_log_purge_details_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI_Archived.dbo.SRStatusUpdateLog_purge_details.
+      - name: mas_pincode_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.MasPincode.
+      - name: mas_pincode_for_mis_hdfc_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.Mas_Pincode_For_MIS_HDFC.
+      - name: mst_campaign_leads_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.MstCampaignLeads.
+      - name: mbs_user_cdc_connect
+        description: Raw CDC envelope for EKYC_ICICI.dbo.MBSUser.

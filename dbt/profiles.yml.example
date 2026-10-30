@@ -1,0 +1,11 @@
+mbs_poc:
+  target: dev
+  outputs:
+    dev:
+      type: starrocks
+      host: "{{ env_var('STARROCKS_DBT_HOST', '127.0.0.1') }}"
+      port: "{{ env_var('STARROCKS_MYSQL_PORT', 9030) | int }}"
+      catalog: "{{ env_var('STARROCKS_CATALOG', 'default_catalog') }}"
+      schema: "{{ env_var('STARROCKS_SCHEMA', 'analytics') }}"
+      username: "{{ env_var('STARROCKS_USER', 'root') }}"
+      password: "{{ env_var('STARROCKS_PASSWORD', '') }}"

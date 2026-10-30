@@ -1,0 +1,11 @@
+USE master;
+GO
+
+IF DB_ID(N'mbs_poc') IS NULL
+BEGIN
+    CREATE DATABASE mbs_poc;
+END;
+GO
+
+ALTER DATABASE mbs_poc SET RECOVERY FULL;
+GO

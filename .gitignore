@@ -1,0 +1,25 @@
+.env
+
+# Local/editor noise
+.DS_Store
+Thumbs.db
+
+# Runtime/generated artifacts
+*.log
+__pycache__/
+*.pyc
+target/
+dbt/target/
+dbt/logs/
+dbt/.user.yml
+.venv/
+.runtime/
+infra/kafka-connect/plugins/iceberg-sink/*.jar
+infra/kafka-connect/plugins/iceberg-sink/lib/
+infra/kafka-connect/plugins/avro-converter/*.jar
+infra/kafka-connect/plugins/avro-converter/lib/
+
+# Evidence can be committed intentionally, but avoid accidental video dumps.
+outputs/
+screenshots/*
+!screenshots/AGENTS.md
