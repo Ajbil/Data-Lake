@@ -261,6 +261,21 @@ those conflicting dependencies. After changing these mounts, recreate only
 `kafka-connect`, then verify source/sink status and a fresh Raw commit without
 resetting Kafka offsets or lake tables.
 
+## Cold StarRocks Startup on Windows
+
+FE and BE health checks allow a five-minute startup grace period. A cold local
+FE replay took about 174 seconds on 2026-10-30, exceeding the old health-check
+failure window. Docker marked it unhealthy and Compose stopped dependency
+startup; the same FE became healthy 39 seconds later without restarting.
+A successful check still releases dependants immediately during the grace
+period. Persistent failures become unhealthy after the grace period and retries.
+
+If Compose has already stopped with FE unhealthy, inspect its current state.
+Once FE is healthy, resume with `setup.ps1 start` from the current project folder.
+Repeated full `up --force-recreate` restarts the cold initialization process.
+Keep the existing named volumes; the catalog's missing Compose-label warning
+is separate from FE readiness and is not a reason to replace that volume.
+
 ## Proof Points
 
 Local SQL sample:

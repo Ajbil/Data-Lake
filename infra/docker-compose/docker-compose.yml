@@ -178,6 +178,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+      start_period: 5m
 
   starrocks-be:
     image: starrocks/be-ubuntu:4.0-latest
@@ -217,6 +218,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+      start_period: 5m
 
   airflow-db:
     image: postgres:16-alpine
