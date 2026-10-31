@@ -1,0 +1,6 @@
+silver_users
+10
+gold_count	distinct_keys
+11	11
+order_number	record_type	champaines	serviceable_pincode	agent_id	source_system
+BASELINE-20261031-125420	Fresh	High-priority	Serviceable	AG001	LATENCY-CHECK

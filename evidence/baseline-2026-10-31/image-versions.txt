@@ -1,0 +1,9 @@
+/mbs-sqlserver|mcr.microsoft.com/mssql/server:2019-latest|sha256:fdee98d3f631673cd8fb9be6d29d7883d7111be9fc0246103dc0cfbbffdabd5a
+/mbs-kafka|confluentinc/cp-kafka:7.6.1|sha256:620734d9fc0bb1f9886932e5baf33806074469f40e3fe246a3fdbb59309535fa
+/mbs-schema-registry|confluentinc/cp-schema-registry:7.6.1|sha256:4813089d589a92d0c1b2e559caf557e4ce79b4ffa26fcd6c95372afba70149fc
+/mbs-kafka-connect|mbs-kafka-connect:debezium-2.7-kafka-client-3.7.2|sha256:24bf261dae3cc3d3a7ca43b6e888d7f041b3285d13d239cd0b699b9f9dc07a74
+/mbs-minio|minio/minio:latest|sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+/mbs-iceberg-rest|tabulario/iceberg-rest:1.6.0|sha256:3b7d31bdfec626b68e97531c9778a1b9119659e456fe28545a49f6aa6a9ce472
+/mbs-starrocks-fe|starrocks/fe-ubuntu:4.0-latest|sha256:ed8ab038e6f59336ec2e26127e3e77885c0754fca0be2ec19edf3df25a99c9ab
+/mbs-starrocks-be|starrocks/be-ubuntu:4.0-latest|sha256:0080d471edfa22f37f19964972b72d55fc96a058c563c8bbba392a55264f116b
+/mbs-airflow-scheduler|mbs-airflow:local|sha256:130cc8eda9d2e01e9c88410258d3a7741b14febe0e7a6806ee362f82ac09ef4a
