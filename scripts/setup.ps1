@@ -53,7 +53,7 @@ Commands:
   run:dbt         Build and test dbt Silver/Gold models.
   health:dbt      Verify dbt Silver/Gold row counts.
   test:cdc        Run the isolated insert/update/delete/rebuild smoke check.
-  health:airflow  Verify Airflow DAG discovery and run one dbt DAG test.
+  health:airflow  Verify DAG discovery and wait for a scheduler-managed dbt run.
   stop            Stop Docker Compose services without deleting volumes.
 
 Typical report flow:

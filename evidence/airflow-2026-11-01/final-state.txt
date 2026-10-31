@@ -1,0 +1,6 @@
+probe_schemas_remaining	0
+gold_rows	11
+report_dag_paused|f
+import_errors|0
+registered_probe_dags|0
+required_connector_tasks_running|16

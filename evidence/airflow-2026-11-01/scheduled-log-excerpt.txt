@@ -1,0 +1,10 @@
+[2026-10-31T18:25:07.025+0000] {subprocess.py:106} INFO - [pipeline] START stage=dbt_run
+[2026-10-31T18:26:07.233+0000] {subprocess.py:106} INFO - 18:26:07  Finished running 9 table models in 0 hours 0 minutes and 33.20 seconds (33.20s).
+[2026-10-31T18:26:07.480+0000] {subprocess.py:106} INFO - 18:26:07  Done. PASS=9 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=9
+[2026-10-31T18:26:09.563+0000] {subprocess.py:106} INFO - [pipeline] SUCCESS stage=dbt_run
+[2026-10-31T18:26:09.564+0000] {subprocess.py:106} INFO - [pipeline] START stage=dbt_test
+[2026-10-31T18:26:50.560+0000] {subprocess.py:106} INFO - 18:26:50  Finished running 32 data tests in 0 hours 0 minutes and 15.09 seconds (15.09s).
+[2026-10-31T18:26:51.366+0000] {subprocess.py:106} INFO - 18:26:51  Done. PASS=32 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=32
+[2026-10-31T18:26:55.029+0000] {subprocess.py:106} INFO - [pipeline] SUCCESS stage=dbt_test
+[2026-10-31T18:26:55.031+0000] {subprocess.py:106} INFO - [pipeline] SUCCESS all stages completed
+[2026-10-31T18:26:55.901+0000] {taskinstance.py:353} INFO - Marking task as SUCCESS. dag_id=mbs_daily_operations_report, task_id=run_dbt_daily_operations_report, run_id=scheduled__2026-10-31T18:20:00+00:00, execution_date=20261031T182000, start_date=20261031T182503, end_date=20261031T182655
