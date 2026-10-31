@@ -1,0 +1,13 @@
+{
+    "tag":  "CDC-FIX-SMOKE-20261031-180408-22c7926e",
+    "status":  "failed",
+    "elapsed_seconds":  100.027,
+    "diagnostic_failure":  true,
+    "dag_was_paused":  true,
+    "dag_restored":  true,
+    "fixture_removed":  true,
+    "failure":  "Intentional diagnostic failure after insert.",
+    "cleanup_errors":  [
+
+                       ]
+}

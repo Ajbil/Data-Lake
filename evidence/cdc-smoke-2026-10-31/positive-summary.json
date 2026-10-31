@@ -1,0 +1,13 @@
+{
+    "tag":  "CDC-FIX-SMOKE-20261031-174953-1e142e2c",
+    "status":  "passed",
+    "elapsed_seconds":  700.281,
+    "diagnostic_failure":  false,
+    "dag_was_paused":  false,
+    "dag_restored":  true,
+    "fixture_removed":  true,
+    "failure":  null,
+    "cleanup_errors":  [
+
+                       ]
+}

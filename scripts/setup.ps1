@@ -52,6 +52,7 @@ Commands:
                   Verify StarRocks FE/BE and Raw Iceberg queries.
   run:dbt         Build and test dbt Silver/Gold models.
   health:dbt      Verify dbt Silver/Gold row counts.
+  test:cdc        Run the isolated insert/update/delete/rebuild smoke check.
   health:airflow  Verify Airflow DAG discovery and run one dbt DAG test.
   stop            Stop Docker Compose services without deleting volumes.
 
@@ -181,6 +182,10 @@ try {
         "health:airflow" {
             Assert-EnvFile
             & (Join-Path $RepoRoot "scripts/airflow/health.ps1") -EnvFile $EnvFile
+        }
+        "test:cdc" {
+            Assert-EnvFile
+            & (Join-Path $RepoRoot "scripts/health/test_cdc_pipeline.ps1")
         }
         { $_ -in @("load:legacy", "load:day6") } {
             Assert-EnvFile

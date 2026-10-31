@@ -124,10 +124,23 @@ What these commands do:
 | `bootstrap:local-sql` | Creates the legacy local `mbs_poc` smoke database, tables, seed data, CDC, and retention. |
 | `bootstrap:report-sample` | Creates local `EKYC_ICICI` and `EKYC_ICICI_Archived` sample report tables, seed rows, and CDC. |
 | `health:services` | Verifies Docker services and platform endpoints. |
+| `test:cdc` | Windows: checks a new synthetic lead through insert/update/delete/rebuild, saves evidence and cleans up its own row. |
 | `ps` | Shows container status. |
 | `stop` | Stops containers without deleting Docker volumes. |
 
 EC2 daily shutdown note: long-running services use `restart: unless-stopped`, so Docker should bring them back when the instance starts again. One-shot init services such as `create-minio-bucket` and `airflow-init` do not restart automatically; run `powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 start` if volumes are recreated or init dependencies need to be re-applied.
+
+## CDC End-to-End Regression
+
+With the report pipeline already healthy, run the Windows end-to-end regression:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup.ps1 test:cdc
+```
+
+It temporarily pauses scheduled report rebuilds, restores the original pause
+state, and leaves existing demonstration rows intact. See the
+[smoke-check runbook](docs/runbooks/02_poc_execution.md#one-command-cdc-smoke-check).
 
 ## Source CDC Startup Flow
 

@@ -1,0 +1,12 @@
+insert_build
+[0m12:27:38  Finished running 2 table models in 0 hours 0 minutes and 51.79 seconds (51.79s).
+[0m12:27:40  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=2
+update_build
+[0m12:29:22  Finished running 2 table models in 0 hours 0 minutes and 14.49 seconds (14.49s).
+[0m12:29:23  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=2
+delete_build
+[0m12:30:41  Finished running 2 table models in 0 hours 0 minutes and 8.31 seconds (8.31s).
+[0m12:30:41  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=2
+repeat_build
+[0m12:31:08  Finished running 2 table models in 0 hours 0 minutes and 5.71 seconds (5.71s).
+[0m12:31:09  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=2
