@@ -1,0 +1,25 @@
+17:38:35  Running with dbt=1.11.9
+17:38:38  Registered adapter: starrocks=1.11.0
+17:38:38  Unable to do partial parsing because profile has changed
+17:38:51  Found 9 models, 32 data tests, 15 sources, 467 macros
+17:38:51
+17:38:51  Concurrency: 1 threads (target='dev')
+17:38:51
+17:38:51  1 of 6 START test gold_lead_population ......................................... [RUN]
+17:38:52  1 of 6 PASS gold_lead_population ............................................... [PASS in 0.99s]
+17:38:52  2 of 6 START test not_null_gold_daily_operations_report_champaines ............. [RUN]
+17:38:53  2 of 6 PASS not_null_gold_daily_operations_report_champaines ................... [PASS in 0.38s]
+17:38:53  3 of 6 START test not_null_gold_daily_operations_report_record_type ............ [RUN]
+17:38:54  3 of 6 PASS not_null_gold_daily_operations_report_record_type .................. [PASS in 0.78s]
+17:38:54  4 of 6 START test not_null_gold_daily_operations_report_serviceable_pincode .... [RUN]
+17:38:54  4 of 6 PASS not_null_gold_daily_operations_report_serviceable_pincode .......... [PASS in 0.38s]
+17:38:54  5 of 6 START test relationships_gold_daily_operations_report_agent_id__user_id__ref_silver_mbs_user_  [RUN]
+17:38:55  5 of 6 PASS relationships_gold_daily_operations_report_agent_id__user_id__ref_silver_mbs_user_  [PASS in 0.40s]
+17:38:55  6 of 6 START test silver_customer_lead_grain ................................... [RUN]
+17:38:55  6 of 6 PASS silver_customer_lead_grain ......................................... [PASS in 0.35s]
+17:38:55
+17:38:55  Finished running 6 data tests in 0 hours 0 minutes and 3.89 seconds (3.89s).
+17:38:56
+17:38:56  Completed successfully
+17:38:56
+17:38:56  Done. PASS=6 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=6
