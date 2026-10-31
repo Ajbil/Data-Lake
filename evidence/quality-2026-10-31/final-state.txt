@@ -1,0 +1,5 @@
+fixture_schemas_remaining	0
+silver_leads	19
+gold_leads	11
+fixture_rows_in_analytics	0
+dag_paused|f

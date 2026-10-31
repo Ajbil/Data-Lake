@@ -5,22 +5,32 @@ models:
     description: >
       PowerBI-facing Daily Operations Report model matching the client report logic over
       consolidated customer leads, assignment logs, status logs, serviceability, and campaigns.
+      Preserves eligible Silver lead rows, including separate physical source tables.
     columns:
       - name: order_number
         tests:
           - not_null
       - name: serviceable_pincode
         tests:
+          - not_null:
+              config:
+                tags: ['quality']
           - accepted_values:
               arguments:
                 values: ['Serviceable', 'Non-Serviceable']
       - name: record_type
         tests:
+          - not_null:
+              config:
+                tags: ['quality']
           - accepted_values:
               arguments:
                 values: ['Fresh', 'RPush']
       - name: champaines
         tests:
+          - not_null:
+              config:
+                tags: ['quality']
           - accepted_values:
               arguments:
                 values: ['High-priority', 'Non-priority']
@@ -29,3 +39,12 @@ models:
           - accepted_values:
               arguments:
                 values: [0, 1]
+      - name: agent_id
+        description: Optional assigned agent; every non-null ID must resolve to the user master.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver_mbs_user')
+                field: user_id
+              config:
+                tags: ['quality']

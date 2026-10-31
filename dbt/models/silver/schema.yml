@@ -15,7 +15,8 @@ models:
   - name: silver_customer_lead_consolidated
     description: >
       Recreates the Daily Operations Report customer lead consolidated view from active, ICICI,
-      archived, and purge lead tables.
+      archived, and purge lead tables. Grain is (source_table, customer_id);
+      order numbers are not assumed globally unique across these tables.
     columns:
       - name: source_table
         tests:

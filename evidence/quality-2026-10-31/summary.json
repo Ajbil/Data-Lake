@@ -1,0 +1,8 @@
+{
+    "schema":  "quality_step4_742501b1",
+    "valid_fixture":  "6/6 passed, including cross-source ARN/ID reuse and null agents",
+    "invalid_fixture":  "6/6 failed as expected; zero SQL errors",
+    "full_build":  "9 models + 32 tests passed",
+    "schema_removed":  true,
+    "dag_restored":  true
+}

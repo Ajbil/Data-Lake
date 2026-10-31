@@ -400,6 +400,47 @@ or the keyless assignment branch. Abrupt termination can prevent cleanup; use th
 saved tag and `CDC-SMOKE-CHECK` marker for targeted recovery. See the
 [implementation and evidence note](../../notes/2026-10-31_cdc_smoke_check.md).
 
+## Targeted Report Quality Checks
+
+The existing Airflow `dbt test` command automatically runs all 32 tests. Six tests
+tagged `quality` cover the bounded Step 4 additions. With the local containers
+running, test the last completed Silver/Gold build using:
+
+```powershell
+docker exec -w /opt/airflow/dbt -e STARROCKS_DBT_HOST=starrocks-fe -e DBT_PROFILES_DIR=/opt/airflow/dbt mbs-airflow-scheduler /home/airflow/.local/bin/dbt test --select tag:quality
+```
+
+Avoid concurrent table replacement: for a standalone check, pause the report DAG,
+allow running/queued work to finish, and restore the original pause state after
+testing. The scheduled task already tests after its own build.
+
+| Check | Contract |
+| --- | --- |
+| Silver physical lead grain | At most one current row per `(source_table, customer_id)`. The same ID/reference in different physical tables is allowed. |
+| Gold population | Counts per `(lead_source_table, order_number)` equal eligible Silver counts, catching missing/extra rows and join multiplication without assuming globally unique ARNs. |
+| Agent relationship | Every non-null Gold `agent_id` exists in `silver_mbs_user.user_id`. Null means unassigned and is allowed. |
+| Three required labels | `serviceable_pincode`, `record_type`, and `champaines` cannot be null. Existing accepted-value tests reject unknown labels. |
+
+Gold eligibility follows the current report's mobile exclusions and date window
+(month start two months before the current date, using created OR updated date).
+If those business rules change, review the population test alongside the model.
+Do not compare all Raw/Silver rows directly with the filtered Gold report.
+
+Required, accepted serviceability labels make Serviceable + Non-Serviceable equal
+the Gold population; a separate sum of the same categories would duplicate this
+contract. These checks do not enforce one business lead across active/archive
+tables, and do not require every lead to have an assignment, campaign, or status log.
+
+On failure, use the named test and its compiled SQL under `dbt/target/compiled/`
+to inspect failing keys locally. Correct the data/model or explicitly review a
+changed business rule before rerunning. Do not bypass a failure to publish a
+snapshot. The existing DAG builds tables before testing, so a failed test marks
+the run failed but does not roll back already rebuilt tables.
+
+The [Step 4 note](../../notes/2026-10-31_targeted_quality_checks.md) records the
+isolated good/bad fixture procedure and execution evidence. It uses temporary
+copies of three derived tables; it does not write source or Raw data.
+
 ## Known Client Decision
 
 Several report fields are decrypted in SQL Server views via `dbo.DecryptedData()`. CDC from base tables captures stored base-table values. Before production hardening, the client must approve whether decrypted report-safe columns are provided source-side, whether decryption logic can be reused downstream, or whether those PII fields should be masked/excluded.

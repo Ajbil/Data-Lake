@@ -1,0 +1,8 @@
+17:41:04  41 of 41 START test relationships_gold_daily_operations_report_agent_id__user_id__ref_silver_mbs_user_  [RUN]
+17:41:04  41 of 41 PASS relationships_gold_daily_operations_report_agent_id__user_id__ref_silver_mbs_user_  [PASS in 0.27s]
+17:41:04
+17:41:04  Finished running 9 table models, 32 data tests in 0 hours 0 minutes and 29.54 seconds (29.54s).
+17:41:04
+17:41:04  Completed successfully
+17:41:04
+17:41:04  Done. PASS=41 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=41
