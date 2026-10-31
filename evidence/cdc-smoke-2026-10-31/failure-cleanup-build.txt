@@ -1,0 +1,2 @@
+[0m12:35:37  Finished running 2 table models in 0 hours 0 minutes and 13.49 seconds (13.49s).
+[0m12:35:38  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=2

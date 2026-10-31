@@ -361,6 +361,45 @@ before/after results are in [the CDC correctness note](../../notes/2026-10-31_cd
 This check covers keyed rows only. The active assignment log lacks a stable row
 key and remains outside the keyed current-state guarantee.
 
+## One-Command CDC Smoke Check
+
+From the project root on Windows, with the existing report pipeline running:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup.ps1 test:cdc
+```
+
+The command requires healthy source/sink tasks and the existing local SQL Server,
+StarRocks and Airflow containers. It creates one GUID-tagged synthetic lead,
+verifies initial and updated values in both Silver/Gold, deletes it, then verifies
+absence after two builds. Raw must contain each real source change before a build
+starts. It never reseeds, resets offsets, restarts failed connectors or edits an
+existing demonstration row.
+
+Scheduled rebuilds are paused during the check and the original pause state is
+restored in `finally`. An active run is allowed to finish; queued runs cause a
+clear failure rather than being cancelled. Run one test at a time and avoid other
+manual dbt builds. Polling defaults to 300 seconds per stage; each dbt invocation
+has a 300-second timeout. Override those limits through the direct script if needed.
+
+Per-run `summary.json`, `checkpoints.csv` and command logs are saved under ignored
+`.runtime/cdc-smoke/<tag>/`. A normal run exits 0 only if the lifecycle and cleanup
+checks pass. Failures exit nonzero and retain their original error; cleanup errors
+are recorded separately. Source cleanup is attempted even if ingestion is broken;
+downstream cleanup cannot be promised while the pipeline is unavailable.
+
+To deliberately exercise cleanup after an inserted row, use this diagnostic
+command. It is expected to exit nonzero even when cleanup succeeds:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\health\test_cdc_pipeline.ps1 -FailAfterInsert
+```
+
+The local test does not measure normal Airflow scheduling latency, sustained load,
+or the keyless assignment branch. Abrupt termination can prevent cleanup; use the
+saved tag and `CDC-SMOKE-CHECK` marker for targeted recovery. See the
+[implementation and evidence note](../../notes/2026-10-31_cdc_smoke_check.md).
+
 ## Known Client Decision
 
 Several report fields are decrypted in SQL Server views via `dbo.DecryptedData()`. CDC from base tables captures stored base-table values. Before production hardening, the client must approve whether decrypted report-safe columns are provided source-side, whether decryption logic can be reused downstream, or whether those PII fields should be masked/excluded.

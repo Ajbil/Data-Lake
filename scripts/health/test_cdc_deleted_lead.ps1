@@ -22,7 +22,7 @@ FROM default_catalog.analytics.gold_daily_operations_report
 WHERE order_number = '$Tag';
 "@
 
-$rows = $query | docker exec -i mbs-starrocks-fe mysql --connect-timeout=5 --batch --skip-column-names -h 127.0.0.1 -P 9030 -u root
+$rows = "SET query_timeout = 15; $query" | docker exec -i mbs-starrocks-fe mysql --connect-timeout=5 --batch --skip-column-names -h 127.0.0.1 -P 9030 -u root
 if ($LASTEXITCODE -ne 0) { throw 'CDC deletion verification query failed.' }
 
 $counts = @{}
