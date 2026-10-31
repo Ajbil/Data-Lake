@@ -1,5 +1,11 @@
 # EC2 Setup Runbook
 
+Historical optional hosting proposal. The current personal project is verified
+locally on Windows; this guide is not part of its setup or a zero-cost deployment
+promise. No EC2 host was provisioned or revalidated by the six-step cleanup.
+Start with the [current README](../../README.md) and review these older capacity
+assumptions separately if paid remote hosting is ever needed.
+
 ## Purpose
 
 Prepare a single EC2 host for the POC stack without using managed AWS services.

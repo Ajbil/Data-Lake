@@ -68,9 +68,11 @@ them for source data or credentials.
    32 passing tests, and both stage success messages appear. The earlier failure
    remains in history; do not mark it successful to hide the incident.
 
-If you need to run dbt directly or edit derived data for diagnosis, pause the DAG,
-wait for running/queued work to finish and restore its original pause state after
-the work. Avoid simultaneous manual and scheduled rebuilds. Do not reset source
+If you need to run dbt directly or edit derived data for diagnosis, let queued
+work finish while the DAG is unpaused, then pause it and wait for any running
+task to finish. Confirm no active runs remain and restore the original pause
+state afterward. Pausing does not drain queued runs; do not cancel them to force
+a manual build. Avoid simultaneous manual and scheduled rebuilds. Do not reset source
 CDC offsets, delete Docker volumes or reseed data to recover a report failure.
 
 ## Scope and proof

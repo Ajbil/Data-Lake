@@ -1,5 +1,9 @@
 # PowerBI to StarRocks Runbook
 
+Optional manual visualization guide. The six-step cleanup verifies the pipeline
+through Gold SQL, not a completed Power BI Desktop refresh. Use synthetic local
+data and the [current README](../../README.md); older client references are provenance.
+
 ## Purpose
 
 Connect PowerBI Desktop on Windows to StarRocks through the MySQL protocol.
@@ -8,7 +12,7 @@ Connect PowerBI Desktop on Windows to StarRocks through the MySQL protocol.
 
 PowerBI is the expected analyst-facing tool. StarRocks exposes a MySQL-compatible endpoint, so PowerBI does not need to understand Iceberg or MinIO directly.
 
-Previous technology: StarRocks serves Gold tables built from Iceberg/dbt.
+Previous technology: dbt builds native StarRocks Gold tables from Iceberg Raw.
 
 Next technology: PowerBI visualizes the Daily Operations Report and proves business usability.
 
@@ -37,13 +41,14 @@ Password: <blank for local POC>
 2. In Power BI Desktop, select **Get data > MySQL database**. Use server
    `localhost:9030`, database `analytics`, and Import mode.
 3. Expand **Advanced options > SQL statement** and paste this small demonstration
-   query. This row was preserved for the manual walkthrough:
+   query. It does not depend on an old tagged row that may age out of Gold:
 
    ```sql
    SELECT order_number, destination_city, bank_status, record_type,
           champaines, serviceable_pincode, agent_name
    FROM analytics.gold_daily_operations_report
-   WHERE order_number = 'CDC-LATENCY-20261029141350';
+   ORDER BY order_number
+   LIMIT 20;
    ```
 
 4. Choose **Database** authentication, user `root`, and a blank password for this
@@ -68,7 +73,7 @@ for what was tested and the remaining desktop UI check.
 
 - Source: Gold `gold_daily_operations_report`.
 - Grain: lead/order-level rows for drill-through.
-- Filters: the model applies the rolling 2-month created/updated date window and excludes the known test mobile numbers.
+- Filters: created OR updated date must be at least month start two months before today; the model also excludes the known test mobile numbers.
 - Useful demo dimensions: `record_type`, `serviceable_pincode`, `champaines`, `state`, `agent_id`, `bank_id`.
 
 Example query for validation before building the visual:
@@ -82,7 +87,7 @@ ORDER BY record_type, serviceable_pincode;
 
 ## Refresh Proof
 
-1. Insert or update a client-approved report-relevant lead/status/assignment row in SQL Server UAT.
+1. Use a new synthetic report-relevant source lead in the local sample, preserving existing demonstration rows.
 2. Wait for CDC, Kafka, Iceberg, Airflow/dbt, and StarRocks visibility.
 3. Refresh PowerBI.
 4. Confirm chart changes.
