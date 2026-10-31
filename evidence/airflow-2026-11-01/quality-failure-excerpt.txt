@@ -1,0 +1,11 @@
+[2026-10-31T18:28:35.706+0000] {subprocess.py:106} INFO - [pipeline] START stage=dbt_run
+[2026-10-31T18:28:54.555+0000] {subprocess.py:106} INFO - 18:28:54  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=1
+[2026-10-31T18:28:55.291+0000] {subprocess.py:106} INFO - [pipeline] SUCCESS stage=dbt_run
+[2026-10-31T18:28:55.292+0000] {subprocess.py:106} INFO - [pipeline] START stage=dbt_test
+[2026-10-31T18:29:11.280+0000] {subprocess.py:106} INFO - 18:29:11  Failure in test not_null_probe_entity_id (models/schema.yml)
+[2026-10-31T18:29:11.281+0000] {subprocess.py:106} INFO - 18:29:11    Got 1 result, configured to fail if != 0
+[2026-10-31T18:29:11.293+0000] {subprocess.py:106} INFO - 18:29:11  Done. PASS=0 WARN=0 ERROR=1 SKIP=0 NO-OP=0 TOTAL=1
+[2026-10-31T18:29:12.212+0000] {subprocess.py:106} INFO - [pipeline] FAILED stage=dbt_test exit_code=1; inspect the dbt output above.
+[2026-10-31T18:29:12.271+0000] {taskinstance.py:1226} INFO - Marking task as FAILED. dag_id=step5_quality_failure_3089eea5, task_id=run_dbt_daily_operations_report, run_id=manual__2026-10-31T18:28:34.365944+00:00, execution_date=20261031T182834, start_date=, end_date=20261031T182912
+[2026-10-31T18:29:12.343+0000] {dagrun.py:905} INFO - DagRun Finished: dag_id=step5_quality_failure_3089eea5, execution_date=2026-10-31 18:28:34.365944+00:00, run_id=manual__2026-10-31T18:28:34.365944+00:00, run_start_date=2026-10-31 18:28:34.365944+00:00, run_end_date=2026-10-31 18:29:12.343318+00:00, run_duration=37.977374, state=failed, external_trigger=False, run_type=manual, data_interval_start=2026-10-31 18:28:34.365944+00:00, data_interval_end=2026-10-31 18:28:34.365944+00:00, dag_hash=None
+STEP5_PROBE_RESULT {"case": "quality", "schema": "step5_quality_3089eea5", "dag_id": "step5_quality_failure_3089eea5", "run_id": "manual__2026-10-31T18:28:34.365944+00:00", "dag_state": "failed", "task_state": "failed", "retries": 0, "skip_on_exit_code": []}

@@ -1,0 +1,4 @@
+PASS run_exit=0 test_exit=0 process_exit=0
+PASS run_exit=17 test_exit=0 process_exit=17
+PASS run_exit=0 test_exit=1 process_exit=1
+PASS run_exit=0 test_exit=99 process_exit=99

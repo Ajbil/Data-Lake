@@ -1,0 +1,8 @@
+[2026-10-31T18:27:26.898+0000] {subprocess.py:106} INFO - [pipeline] START stage=dbt_run
+[2026-10-31T18:28:18.391+0000] {subprocess.py:106} INFO - 18:28:18    Database Error in model probe_entity (models/probe_entity.sql)
+[2026-10-31T18:28:18.396+0000] {subprocess.py:106} INFO -   1064 (HY000): Getting analyzing error. Detail message: Column 'missing_step5_column' cannot be resolved.
+[2026-10-31T18:28:18.482+0000] {subprocess.py:106} INFO - 18:28:18  Done. PASS=0 WARN=0 ERROR=1 SKIP=0 NO-OP=0 TOTAL=1
+[2026-10-31T18:28:20.668+0000] {subprocess.py:106} INFO - [pipeline] FAILED stage=dbt_run exit_code=1; inspect the dbt output above.
+[2026-10-31T18:28:20.873+0000] {taskinstance.py:1226} INFO - Marking task as FAILED. dag_id=step5_build_failure_3089eea5, task_id=run_dbt_daily_operations_report, run_id=manual__2026-10-31T18:27:23.916241+00:00, execution_date=20261031T182723, start_date=, end_date=20261031T182820
+[2026-10-31T18:28:21.142+0000] {dagrun.py:905} INFO - DagRun Finished: dag_id=step5_build_failure_3089eea5, execution_date=2026-10-31 18:27:23.916241+00:00, run_id=manual__2026-10-31T18:27:23.916241+00:00, run_start_date=2026-10-31 18:27:23.916241+00:00, run_end_date=2026-10-31 18:28:21.142143+00:00, run_duration=57.225902, state=failed, external_trigger=False, run_type=manual, data_interval_start=2026-10-31 18:27:23.916241+00:00, data_interval_end=2026-10-31 18:27:23.916241+00:00, dag_hash=None
+STEP5_PROBE_RESULT {"case": "build", "schema": "step5_build_3089eea5", "dag_id": "step5_build_failure_3089eea5", "run_id": "manual__2026-10-31T18:27:23.916241+00:00", "dag_state": "failed", "task_state": "failed", "retries": 0, "skip_on_exit_code": []}

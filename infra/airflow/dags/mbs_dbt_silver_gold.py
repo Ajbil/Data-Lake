@@ -7,11 +7,22 @@ from airflow.operators.bash import BashOperator
 
 
 DBT_COMMAND = """
-set -euo pipefail
+set -Eeuo pipefail
+stage=setup
+trap 'rc=$?; echo "[pipeline] FAILED stage=$stage exit_code=$rc; inspect the dbt output above." >&2; exit "$rc"' ERR
 export PATH="/home/airflow/.local/bin:${PATH}"
 cd /opt/airflow/dbt
+
+stage=dbt_run
+echo "[pipeline] START stage=$stage"
 dbt run --project-dir /opt/airflow/dbt --profiles-dir /opt/airflow/dbt --target dev
+echo "[pipeline] SUCCESS stage=$stage"
+
+stage=dbt_test
+echo "[pipeline] START stage=$stage"
 dbt test --project-dir /opt/airflow/dbt --profiles-dir /opt/airflow/dbt --target dev
+echo "[pipeline] SUCCESS stage=$stage"
+echo "[pipeline] SUCCESS all stages completed"
 """
 
 
@@ -28,6 +39,8 @@ with DAG(
     run_dbt = BashOperator(
         task_id="run_dbt_daily_operations_report",
         bash_command=DBT_COMMAND,
+        retries=0,
+        skip_on_exit_code=None,
         env={
             "DBT_PROFILES_DIR": "/opt/airflow/dbt",
             "STARROCKS_DBT_HOST": "starrocks-fe",

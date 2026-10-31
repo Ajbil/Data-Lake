@@ -1,0 +1,2 @@
+run_id,run_type,external_trigger,dag_state,start_date,end_date,task_id,task_state,try_number
+scheduled__2026-10-31T18:20:00+00:00,scheduled,f,success,2026-10-31 18:25:00.518889+00,2026-10-31 18:26:57.86994+00,run_dbt_daily_operations_report,success,1

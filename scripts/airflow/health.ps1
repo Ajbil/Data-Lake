@@ -53,7 +53,7 @@ try {
             return
         }
         if ($state -eq "failed") {
-            throw "Airflow verification run $RunId failed. Inspect its task log at http://localhost:8088."
+            throw "Airflow verification run $RunId failed. Task logs: /opt/airflow/logs/dag_id=$DagId/run_id=$RunId/task_id=run_dbt_daily_operations_report/ in mbs-airflow-scheduler. See docs/runbooks/03_airflow_failures.md; the UI at http://localhost:8088 is optional."
         }
         if ((Get-Date) -ge $deadline) {
             throw "Timed out waiting for Airflow run $RunId after $TimeoutSeconds seconds. Last state: $state. Inspect the run before retrying."

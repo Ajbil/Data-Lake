@@ -1,0 +1,10 @@
+{
+  "case": "quality",
+  "schema": "step5_quality_3089eea5",
+  "dag_id": "step5_quality_failure_3089eea5",
+  "run_id": "manual__2026-10-31T18:28:34.365944+00:00",
+  "dag_state": "failed",
+  "task_state": "failed",
+  "retries": 0,
+  "skip_on_exit_code": []
+}

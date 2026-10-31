@@ -1,0 +1,5 @@
+[2026-10-31T18:22:03.080+0000] {subprocess.py:106} INFO - 18:22:03  Finished running 9 table models in 0 hours 0 minutes and 53.95 seconds (53.95s).
+[2026-10-31T18:22:03.804+0000] {subprocess.py:106} INFO - 18:22:03  Done. PASS=9 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=9
+[2026-10-31T18:22:54.051+0000] {subprocess.py:106} INFO - 18:22:54  Finished running 32 data tests in 0 hours 0 minutes and 11.33 seconds (11.33s).
+[2026-10-31T18:22:54.312+0000] {subprocess.py:106} INFO - 18:22:54  Done. PASS=32 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=32
+[2026-10-31T18:22:56.189+0000] {taskinstance.py:353} INFO - Marking task as SUCCESS. dag_id=mbs_daily_operations_report, task_id=run_dbt_daily_operations_report, run_id=scheduled__2026-10-31T18:15:00+00:00, execution_date=20261031T181500, start_date=20261031T182006, end_date=20261031T182256

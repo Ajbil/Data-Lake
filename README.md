@@ -292,6 +292,8 @@ Airflow proof from the current workspace:
   keyed CDC current-state regression fixture and six targeted quality checks.
   See the [CDC correctness check](docs/runbooks/02_poc_execution.md#basic-keyed-cdc-correctness-check)
   and [report quality checks](docs/runbooks/02_poc_execution.md#targeted-report-quality-checks).
+- Report task logs identify the failed dbt stage and preserve its exit code.
+  See [Airflow failure inspection and recovery](docs/runbooks/03_airflow_failures.md).
 
 ## Legacy Load And Failure Harness
 
