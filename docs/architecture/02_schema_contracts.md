@@ -79,6 +79,29 @@ It exposes the report fields used by PowerBI:
 - `appointment_created_date`
 - `is_active_arn`
 
+## Keyed CDC Current State
+
+Silver reads each keyed physical source through `current_cdc_rows`. It resolves
+the key from `after` or a delete's `before`, ranks `r/c/u/d` together, then removes
+a latest delete. Ordering uses SQL Server commit LSN, initial-snapshot precedence
+at an equal boundary, change LSN and event serial number; source/arrival timestamps
+are fallbacks. This assumes canonical fixed-width SQL Server LSNs and immutable
+events within one source per Raw table. Database restore/LSN reset and conflicting
+payloads at identical coordinates require a separate recovery policy.
+
+This preserves separate log IDs as history rows while removing superseded CDC
+versions. It does not deduplicate business leads across active/archive tables.
+The active `ServiceRequestAssignLog` has no stable key and retains its existing
+history path; deletes/updates for that keyless source are outside this guarantee.
+Its archived and purge tables have `Id` and use keyed current state.
+
+Proof: the `cdc_current_rows` dbt test runs synthetic structs on StarRocks,
+including deletes, source-order/clock disagreement, equal timestamps, snapshots,
+replay and key reuse. A live tagged source-to-Gold check is documented in the
+[execution runbook](../runbooks/02_poc_execution.md#basic-keyed-cdc-correctness-check).
+If the source contract is unavailable, keep Raw intact and investigate rather
+than resetting offsets or claiming a reliable current state.
+
 ## PII and Decryption Caveat
 
 The supplied SQL Server views call `dbo.DecryptedData()` for encrypted base-table fields. Raw CDC from the physical base tables will carry the stored base-table values, not automatically the decrypted view output.

@@ -330,6 +330,37 @@ For large client datasets, use bulk initial load plus CDC cutover instead of rel
 7. Build initial Silver and Gold from Raw.
 8. Validate the Gold report against client row counts, totals, and report screenshots.
 
+## Basic Keyed CDC Correctness Check
+
+The 26th dbt data test is a self-contained StarRocks fixture of the shared keyed
+CDC rule. Run it with the existing configured dbt runtime:
+
+```powershell
+docker exec -w /opt/airflow/dbt -e STARROCKS_DBT_HOST=starrocks-fe -e DBT_PROFILES_DIR=/opt/airflow/dbt mbs-airflow-scheduler /home/airflow/.local/bin/dbt test --select cdc_current_rows
+```
+
+For an actual synthetic lead that has already been deleted and whose delete is
+present in Raw, rebuild the lead/report models, then run the read-only assertion:
+
+```powershell
+docker exec -w /opt/airflow/dbt -e STARROCKS_DBT_HOST=starrocks-fe -e DBT_PROFILES_DIR=/opt/airflow/dbt mbs-airflow-scheduler /home/airflow/.local/bin/dbt run --select silver_customer_lead_consolidated gold_daily_operations_report
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\health\test_cdc_deleted_lead.ps1 -Tag CDC-FIX-20261031-131923
+```
+
+The assertion requires a real Raw `d` event and zero current Silver/Gold rows; an
+unknown tag cannot pass. It does not insert or delete anything. The recorded tag
+exists in this local evidence dataset; another installation must prepare its own
+uniquely tagged synthetic lead, observe its insert, delete it at the source and
+wait for its Raw delete. Never use original demonstration/customer rows.
+
+For manual rebuild experiments, pause the report DAG first, wait for active runs
+to finish, and restore its original pause state afterward to avoid concurrent
+table replacement. Source/sink services continue ingesting. Details and measured
+before/after results are in [the CDC correctness note](../../notes/2026-10-31_cdc_correctness.md).
+
+This check covers keyed rows only. The active assignment log lacks a stable row
+key and remains outside the keyed current-state guarantee.
+
 ## Known Client Decision
 
 Several report fields are decrypted in SQL Server views via `dbo.DecryptedData()`. CDC from base tables captures stored base-table values. Before production hardening, the client must approve whether decrypted report-safe columns are provided source-side, whether decryption logic can be reused downstream, or whether those PII fields should be masked/excluded.

@@ -1,0 +1,7 @@
+[0m08:02:09  1 of 1 START test cdc_current_rows ............................................. [RUN]
+[0m08:02:15  1 of 1 FAIL 6 cdc_current_rows ................................................. [[31mFAIL 6[0m in 5.95s]
+[0m08:02:17  Finished running 1 test in 0 hours 0 minutes and 10.02 seconds (10.02s).
+[0m08:02:18  [31mFailure in test cdc_current_rows (tests/cdc_current_rows.sql)[0m
+[0m08:02:19    Got 6 results, configured to fail if != 0
+[0m08:02:19    compiled code at /tmp/cdc-fixture-before/compiled/mbs_poc/tests/cdc_current_rows.sql
+[0m08:02:19  Done. PASS=0 WARN=0 ERROR=1 SKIP=0 NO-OP=0 TOTAL=1

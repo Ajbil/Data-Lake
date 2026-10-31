@@ -1,0 +1,5 @@
+[0m08:19:26  2 of 13 START test cdc_current_rows ............................................ [RUN]
+[0m08:19:29  2 of 13 PASS cdc_current_rows .................................................. [[32mPASS[0m in 3.11s]
+[0m08:20:05  Finished running 2 table models, 11 data tests in 0 hours 0 minutes and 49.32 seconds (49.32s).
+[0m08:20:06  [32mCompleted successfully[0m
+[0m08:20:06  Done. PASS=13 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=13
