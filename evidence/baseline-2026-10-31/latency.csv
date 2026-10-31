@@ -1,0 +1,6 @@
+"tag","stage","observed_at_local","delta_from_previous_seconds","elapsed_seconds","details"
+"BASELINE-20261031-125420","SQL Server source insert","2026-10-31T12:54:31.8677243+05:30","0","6.157","EKYC_ICICI.dbo.Customer_Lead RefNumber=BASELINE-20261031-125420"
+"BASELINE-20261031-125420","Kafka CDC event visible","2026-10-31T12:55:22.9335292+05:30","51.066","57.223","mbs_poc.EKYC_ICICI.dbo.Customer_Lead"
+"BASELINE-20261031-125420","Iceberg raw visible through StarRocks","2026-10-31T12:55:28.8953041+05:30","5.962","63.185","iceberg_catalog.raw.customer_lead_cdc_connect count=1"
+"BASELINE-20261031-125420","Airflow DAG triggered","2026-10-31T12:58:14.8983015+05:30","166.003","229.188","mbs_daily_operations_report run_id=latency_BASELINE_20261031_125420"
+"BASELINE-20261031-125420","StarRocks Gold visible","2026-10-31T12:58:18.9692121+05:30","4.071","233.259","default_catalog.analytics.gold_daily_operations_report count=1"

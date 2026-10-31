@@ -1,0 +1,2 @@
+run_id|state|start_date|end_date
+latency_BASELINE_20261031_125420|success|2026-10-31 07:29:31.463279+00|2026-10-31 07:32:52.524252+00

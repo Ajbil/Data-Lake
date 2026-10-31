@@ -1,0 +1,15 @@
+Checking dbt Silver/Gold tables in StarRocks...
+silver_customer_leads_count
+19
+silver_assignment_log_count
+34
+silver_sr_status_log_count
+3
+silver_mbs_user_count
+0
+gold_daily_operations_report_count
+11
+record_type	lead_count
+Fresh	11
+
+Daily Operations Report dbt verification complete.

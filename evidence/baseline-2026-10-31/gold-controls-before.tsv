@@ -1,0 +1,5 @@
+record_type	Fresh	10
+serviceability	Serviceable	10
+priority	High-priority	10
+grain	distinct_order_number	10
+grain	null_order_number	0
