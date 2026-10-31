@@ -46,16 +46,10 @@ customer_lead as (
         1 as is_active_arn,
         op as cdc_operation,
         source.ts_ms as source_ts_ms,
-        ts_ms as debezium_ingested_ts_ms,
-        row_number() over (
-            partition by after.CustomerId
-            order by coalesce(source.ts_ms, ts_ms) desc, ts_ms desc
-        ) as latest_rank
-    from {{ source('raw_iceberg', 'customer_lead_cdc_connect') }}
+        ts_ms as debezium_ingested_ts_ms
+    from ({{ current_cdc_rows(source('raw_iceberg', 'customer_lead_cdc_connect'), 'CustomerId') }}) cdc
     left join original_pincode pin
         on after.RefNumber = pin.ref_number
-    where op in ('r', 'c', 'u')
-      and after is not null
 ),
 
 customer_lead_icici as (
@@ -83,16 +77,10 @@ customer_lead_icici as (
         1 as is_active_arn,
         op as cdc_operation,
         source.ts_ms as source_ts_ms,
-        ts_ms as debezium_ingested_ts_ms,
-        row_number() over (
-            partition by after.CustomerId
-            order by coalesce(source.ts_ms, ts_ms) desc, ts_ms desc
-        ) as latest_rank
-    from {{ source('raw_iceberg', 'customer_lead_icici_cdc_connect') }}
+        ts_ms as debezium_ingested_ts_ms
+    from ({{ current_cdc_rows(source('raw_iceberg', 'customer_lead_icici_cdc_connect'), 'CustomerId') }}) cdc
     left join original_pincode pin
         on after.RefNumber = pin.ref_number
-    where op in ('r', 'c', 'u')
-      and after is not null
 ),
 
 customer_lead_archived as (
@@ -120,16 +108,10 @@ customer_lead_archived as (
         0 as is_active_arn,
         op as cdc_operation,
         source.ts_ms as source_ts_ms,
-        ts_ms as debezium_ingested_ts_ms,
-        row_number() over (
-            partition by after.CustomerId
-            order by coalesce(source.ts_ms, ts_ms) desc, ts_ms desc
-        ) as latest_rank
-    from {{ source('raw_iceberg', 'customer_lead_archived_cdc_connect') }}
+        ts_ms as debezium_ingested_ts_ms
+    from ({{ current_cdc_rows(source('raw_iceberg', 'customer_lead_archived_cdc_connect'), 'CustomerId') }}) cdc
     left join original_pincode pin
         on after.RefNumber = pin.ref_number
-    where op in ('r', 'c', 'u')
-      and after is not null
 ),
 
 customer_lead_purge as (
@@ -157,16 +139,10 @@ customer_lead_purge as (
         0 as is_active_arn,
         op as cdc_operation,
         source.ts_ms as source_ts_ms,
-        ts_ms as debezium_ingested_ts_ms,
-        row_number() over (
-            partition by after.CustomerId
-            order by coalesce(source.ts_ms, ts_ms) desc, ts_ms desc
-        ) as latest_rank
-    from {{ source('raw_iceberg', 'customer_lead_purge_details_cdc_connect') }}
+        ts_ms as debezium_ingested_ts_ms
+    from ({{ current_cdc_rows(source('raw_iceberg', 'customer_lead_purge_details_cdc_connect'), 'CustomerId') }}) cdc
     left join original_pincode pin
         on after.RefNumber = pin.ref_number
-    where op in ('r', 'c', 'u')
-      and after is not null
 )
 
 select
@@ -195,7 +171,6 @@ select
     source_ts_ms,
     debezium_ingested_ts_ms
 from customer_lead
-where latest_rank = 1
 union all
 select
     source_table,
@@ -223,7 +198,6 @@ select
     source_ts_ms,
     debezium_ingested_ts_ms
 from customer_lead_icici
-where latest_rank = 1
 union all
 select
     source_table,
@@ -251,7 +225,6 @@ select
     source_ts_ms,
     debezium_ingested_ts_ms
 from customer_lead_archived
-where latest_rank = 1
 union all
 select
     source_table,
@@ -279,4 +252,3 @@ select
     source_ts_ms,
     debezium_ingested_ts_ms
 from customer_lead_purge
-where latest_rank = 1

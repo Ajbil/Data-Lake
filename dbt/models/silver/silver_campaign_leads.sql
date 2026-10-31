@@ -16,14 +16,8 @@ with latest as (
         after.status as status,
         after.SpecialCampaign as special_campaign,
         source.ts_ms as source_ts_ms,
-        ts_ms as debezium_ingested_ts_ms,
-        row_number() over (
-            partition by after.Id
-            order by coalesce(source.ts_ms, ts_ms) desc, ts_ms desc
-        ) as latest_rank
-    from {{ source('raw_iceberg', 'mst_campaign_leads_cdc_connect') }}
-    where op in ('r', 'c', 'u')
-      and after is not null
+        ts_ms as debezium_ingested_ts_ms
+    from ({{ current_cdc_rows(source('raw_iceberg', 'mst_campaign_leads_cdc_connect'), 'Id') }}) cdc
 )
 
 select
@@ -38,4 +32,3 @@ select
     source_ts_ms,
     debezium_ingested_ts_ms
 from latest
-where latest_rank = 1

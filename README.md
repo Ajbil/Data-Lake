@@ -275,7 +275,9 @@ Airflow proof from the current workspace:
 - DAG schedule is every 5 minutes.
 - `health:airflow` triggers a normal scheduler-managed run and waits for its result.
 - `max_active_runs=1` keeps scheduled and health-check runs from rebuilding the same tables concurrently.
-- The current report project contains 9 dbt models and 25 data tests.
+- The current report project contains 9 dbt models and 26 data tests, including a
+  keyed CDC current-state regression fixture. See the
+  [CDC correctness check](docs/runbooks/02_poc_execution.md#basic-keyed-cdc-correctness-check).
 
 ## Legacy Load And Failure Harness
 

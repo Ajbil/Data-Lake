@@ -1,0 +1,9 @@
+
+check                           actual passed
+-----                           ------ ------
+Raw delete captured                  1   True
+Deleted lead absent from Silver      0   True
+Deleted lead absent from Gold        0   True
+
+
+CDC deletion regression passed for CDC-FIX-20261031-131923.
