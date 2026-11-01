@@ -4,6 +4,11 @@
 
 Accepted for Day 3 POC execution.
 
+Current status: Kafka Connect is the verified fifteen-table report ingestion
+path. The legacy PyIceberg writer below targets the earlier two-table smoke
+dataset and is not a tested drop-in for this report. Spark is a historical
+alternative, not a deployed service. See the [current architecture](../architecture/01_end_to_end_flow.md).
+
 ## Context
 
 Kafka Connect Iceberg sink keeps ingestion declarative and visible through Kafka Connect. Connector maturity can still vary by image, version, Avro handling, envelope shape, and schema evolution behavior.
@@ -43,8 +48,8 @@ The fallback must preserve:
 
 ## Day 3 Result
 
-- Preferred sink plugin implemented through [pom.xml](C:\Users\caw-dev\Desktop\mbs\infra\kafka-connect\plugins\iceberg-sink\pom.xml) and [day3_iceberg_sink_plugin.ps1](C:\Users\caw-dev\Desktop\mbs\scripts\bootstrap\day3_iceberg_sink_plugin.ps1).
-- Fallback writer implemented in [write_raw_iceberg_day3.py](C:\Users\caw-dev\Desktop\mbs\scripts\lake\write_raw_iceberg_day3.py).
+- Preferred sink plugin implemented through [pom.xml](../../infra/kafka-connect/plugins/iceberg-sink/pom.xml) and [day3_iceberg_sink_plugin.ps1](../../scripts/bootstrap/day3_iceberg_sink_plugin.ps1).
+- Fallback writer implemented in [write_raw_iceberg_day3.py](../../scripts/lake/write_raw_iceberg_day3.py).
 - Raw namespace: `raw`.
 - Kafka Connect sink tables: `raw.agents_cdc_connect` and `raw.kyc_completions_cdc_connect`.
 - Fallback writer tables: `raw.agents_cdc` and `raw.kyc_completions_cdc`.

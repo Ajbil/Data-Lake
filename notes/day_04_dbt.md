@@ -10,8 +10,8 @@ dbt turns auditable CDC into business-ready analytics tables.
 
 ## Commands or Actions
 
-- Installed pinned `dbt-starrocks==1.11.0` from [requirements-day4.txt](C:\Users\caw-dev\Desktop\mbs\requirements-day4.txt).
-- Created dbt project/profile files under [dbt](C:\Users\caw-dev\Desktop\mbs\dbt).
+- Installed pinned `dbt-starrocks==1.11.0` from [requirements-day4.txt](../requirements-day4.txt).
+- Created dbt project/profile files under [dbt](../dbt).
 - Built and tested models with:
 
 ```powershell

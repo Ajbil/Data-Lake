@@ -10,7 +10,7 @@ PowerBI is the final business-facing proof that the pipeline produces usable ana
 
 ## Commands or Actions
 
-- Updated [docs/runbooks/03_powerbi_starrocks.md](C:\Users\caw-dev\Desktop\mbs\docs\runbooks\03_powerbi_starrocks.md) with local StarRocks connection details and a validation query.
+- Updated [docs/runbooks/03_powerbi_starrocks.md](../docs/runbooks/03_powerbi_starrocks.md) with local StarRocks connection details and a validation query.
 - PowerBI Desktop remains a manual UI validation step.
 
 ## Evidence Captured

@@ -11,7 +11,7 @@ StarRocks is the SQL serving layer that connects Iceberg data to dbt and PowerBI
 ## Commands or Actions
 
 - Started StarRocks FE/BE through Docker Compose as `mbs-starrocks-fe` and `mbs-starrocks-be`.
-- Created `iceberg_catalog` with [infra/starrocks/catalogs/create_iceberg_catalog.sql](C:\Users\caw-dev\Desktop\mbs\infra\starrocks\catalogs\create_iceberg_catalog.sql).
+- Created `iceberg_catalog` with [infra/starrocks/catalogs/create_iceberg_catalog.sql](../infra/starrocks/catalogs/create_iceberg_catalog.sql).
 - Verified with:
 
 ```powershell

@@ -2,7 +2,10 @@
 
 ## Purpose
 
-Define the client report source contracts now used by the POC. The report is the DSB-SahiBnk Daily Operations Report over SQL Server `EKYC_ICICI`, `EKYC_ICICI_Archived`, and reporting views from `EKYC_ICICI_Report`.
+Define the operational report contracts reproduced by the local synthetic POC.
+The database/table names retain their original report-domain names; this personal
+demo captures physical tables in `EKYC_ICICI` and `EKYC_ICICI_Archived`, not the
+original `EKYC_ICICI_Report` view results. See the [current flow](01_end_to_end_flow.md).
 
 ## Source Tables Captured by CDC
 
@@ -18,6 +21,7 @@ Current database: `EKYC_ICICI`.
 | `dbo.MasPincode` | Serviceability lookup. |
 | `dbo.Mas_Pincode_For_MIS_HDFC` | Pincode-to-state lookup. |
 | `dbo.MstCampaignLeads` | Campaign/appointment source for priority tagging. |
+| `dbo.MBSUser` | Agent and supervisor lookup. |
 
 Archived database: `EKYC_ICICI_Archived`.
 
@@ -48,6 +52,14 @@ Silver recreates the client view logic in dbt:
 | `silver_pincode_serviceability` | Distinct serviceable pincode lookup from `MasPincode` |
 | `silver_pincode_state_lookup` | State lookup from `Mas_Pincode_For_MIS_HDFC` |
 | `silver_campaign_leads` | `VIEW_MstCampaignLeads` readable campaign/appointment fields |
+| `silver_change_pincode_log` | Keyed pincode-change history used to recover the original pincode |
+| `silver_mbs_user` | Current agent/user master and supervisor relationships |
+
+There are fifteen physical report sources and eight Silver models. Silver lead
+grain is `(source_table, customer_id)`. Gold is a native StarRocks table preserving
+eligible Silver rows, not an assertion that each order number is globally unique.
+Its date window starts at month start two months before the current date (created
+OR updated), so dated fixture counts can change over time.
 
 ## Gold Contract
 

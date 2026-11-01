@@ -11,7 +11,7 @@ Airflow provides the recurring transformation cycle needed for the 5-minute Powe
 ## Commands or Actions
 
 - Added a local Airflow image with `dbt-starrocks`.
-- Added `mbs_dbt_silver_gold` DAG under [infra/airflow/dags](C:\Users\caw-dev\Desktop\mbs\infra\airflow\dags).
+- Added `mbs_dbt_silver_gold` DAG under [infra/airflow/dags](../infra/airflow/dags).
 - Started Airflow with:
 
 ```powershell

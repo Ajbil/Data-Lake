@@ -1,124 +1,87 @@
-# End-to-End Flow
+# Implemented data flow
 
-## Flow Summary
+This is the current local synthetic-data path. Older client/milestone documents
+are background; [the README](../../README.md) is the setup entry point and
+[the evidence index](../../evidence/README.md) distinguishes verified results.
 
 ```text
-SQL Server CDC -> Debezium -> Kafka Avro -> Kafka Connect Iceberg sink
--> Iceberg Raw on MinIO -> StarRocks -> dbt Silver/Gold
--> Airflow every 5 minutes -> PowerBI Daily Operations Report
+SQL Server CDC -> Debezium -> Kafka Avro -> Kafka Connect Iceberg sinks
+    -> Raw Iceberg files in MinIO, registered by Iceberg REST
+    -> StarRocks external iceberg_catalog.raw
+    -> dbt SQL -> native default_catalog.analytics Silver/Gold
+
+Airflow schedules dbt run + dbt test every five minutes.
+SQL clients and optional Power BI read the native Gold report.
 ```
 
-The POC now targets the client DSB-SahiBnk Daily Operations Report. It validates whether source changes from `EKYC_ICICI` and `EKYC_ICICI_Archived` on the DSB-SahiBnk SQL Server can land in Raw Iceberg, be rebuilt into the report's Silver view equivalents, and produce `gold_daily_operations_report` for PowerBI within the 5-minute dbt schedule.
+## Technology roles and operational fallback
 
-## Stage Details
-
-| Order | Stage | Why selected | Receives from | Sends to | Working proof |
+| Technology | Why used | Input | Consumer | Proof | If blocked |
 | --- | --- | --- | --- | --- | --- |
-| 1 | SQL Server CDC | Native change capture for the client SQL Server source. | DSB-SahiBnk `EKYC_ICICI` tables | Debezium | CDC-enabled tables have change metadata |
-| 2 | Debezium | Proven SQL Server CDC connector with snapshots and schema history. | SQL Server CDC/log metadata | Kafka Connect Avro converters | Connector status is `RUNNING` |
-| 3 | Kafka | Durable replay buffer and operational visibility. | Debezium | Kafka Connect Iceberg sink | DSB topics exist and offsets advance |
-| 4 | Schema Registry | Versioned Avro contracts for each source table. | Kafka Connect Avro converters | Consumers and sinks | Subjects exist for DSB CDC topics |
-| 5 | Kafka Connect Iceberg sink | Declarative table-to-Raw ingestion. | Kafka topics | Iceberg Raw tables | Parquet and metadata files appear in MinIO |
-| 6 | MinIO | Self-hosted S3-compatible object storage for POC. | Iceberg writers | Iceberg catalog and StarRocks | `lakehouse` bucket contains warehouse objects |
-| 7 | Iceberg REST catalog | Engine-neutral metadata catalog and schema evolution. | Iceberg writers | StarRocks/dbt | Catalog lists Raw tables |
-| 8 | StarRocks | Fast SQL layer and MySQL protocol target for BI. | Iceberg Raw and dbt tables | dbt and PowerBI | Raw/Silver/Gold `COUNT(*)` queries work |
-| 9 | dbt | Version-controlled report transformations and tests. | StarRocks Raw | Silver and Gold models | `dbt run` and `dbt test` succeed |
-| 10 | Airflow | 5-minute scheduler for dbt. | Schedule and dbt project | StarRocks/dbt execution | DAG succeeds |
-| 11 | PowerBI | Business validation surface. | StarRocks Gold | Dashboard/report | Daily Operations Report refreshes |
+| SQL Server 2019 CDC | Capture row changes from the relational source | Synthetic application tables | Debezium | CDC-enabled tables and controlled source mutations | Inspect SQL Server Agent/capture jobs; preserve offsets |
+| Debezium 2.7 | Initial snapshot plus ongoing SQL Server changes | CDC metadata and rows | Kafka | Source task RUNNING and new events arrive | Inspect the failing source task; resolve source/contract issue |
+| Kafka | Separate change capture from lake writes | Debezium Avro records | Iceberg sinks | Topics/offsets advance; Raw receives the event | Inspect broker and persistent storage; no offset reset as routine recovery |
+| Schema Registry / Avro | Typed, registered CDC contracts | Connect converter schemas | Kafka consumers/sinks | Source subjects are registered | Check converter installation and subjects; no silent format switch |
+| Kafka Connect Iceberg sink 1.8.1 | Declarative ingestion per topic | Fifteen report topics | Raw Iceberg | All 15 sink tasks RUNNING and Raw rows/files visible | Diagnose failed task/commit; alternate writer requires a separately validated contract |
+| MinIO | Local S3-compatible file storage | Iceberg data/metadata writes | REST catalog and StarRocks | Warehouse Parquet/metadata objects exist | Check disk/service health; retain warehouse and catalog state |
+| Iceberg + REST catalog | Table snapshots and registrations above object files | Sink commits and warehouse locations | StarRocks external catalog | Fifteen report tables can be listed/queried | Restore service/registration access; follow catalog migration notes |
+| StarRocks FE/BE | Query Raw and serve transformed tables over SQL | External Raw plus dbt SQL | dbt and report clients | Raw queries and native Gold queries succeed | Check FE/BE readiness and external catalog before rebuilding |
+| dbt-starrocks | Versioned SQL and executable quality contracts | Raw relations via StarRocks | Eight Silver models and one Gold model | Nine models and 32 tests pass | Inspect named failed model/test and correct the cause |
+| Airflow 2.10.5 | Recurring transformation and run history | Five-minute schedule and dbt project | StarRocks report refresh | Actual scheduled run and failure probes in evidence | Use stage logs/recovery guide; pause/drain before direct dbt work |
+| Power BI (optional) | Manual analyst-facing visualization | Native Gold over MySQL protocol | Desktop report | Separate driver/query notes; final UI refresh not established by cleanup | Demonstrate the same Gold SQL directly |
 
-## Raw CDC Design
+Versions above come from repository configuration and recorded runs, not a claim
+that every image is pinned. Current Compose and dbt configuration are the source
+of truth: [Compose](../../infra/docker-compose/docker-compose.yml),
+[dbt project](../../dbt/dbt_project.yml), [DAG](../../infra/airflow/dags/mbs_dbt_silver_gold.py).
 
-Raw Iceberg tables preserve the Debezium envelope:
+## Storage and modeling contracts
 
-- `op`
-- `before`
-- `after`
-- `source`
-- source event timestamp
-- Debezium ingestion timestamp
+Raw preserves the Debezium envelope (`op`, `before`, `after`, `source`, `ts_ms`)
+append-only. A SQL Server delete remains an audit event; it does not physically
+remove prior Raw rows. The fifteen mappings are defined by
+[Raw sources](../../dbt/models/raw/sources.yml) and
+[connector registration](../../scripts/connectors/register_iceberg_day3.ps1).
+Extra historical tables in a local catalog are not required report sources.
 
-Raw is append-only and audit-oriented. Silver owns current-state interpretation, union logic, and report shaping.
+Fourteen keyed sources use [current_cdc_rows](../../dbt/macros/current_cdc_rows.sql).
+Rank all snapshot/create/update/delete events by source position, retain one
+latest version, then exclude a latest delete. Replays at the same immutable
+coordinates do not create extra current entities. Separate status/log IDs remain
+separate history rows. The active keyless assignment source remains an exception.
+See the [full contracts and assumptions](02_schema_contracts.md).
 
-## DSB Raw Tables
+Silver's physical lead key is `(source_table, customer_id)`, so movement or overlap
+between active/archive tables does not imply a globally unique business lead.
+[Gold SQL](../../dbt/models/gold/gold_daily_operations_report.sql) joins lead,
+assignment, status, pincode, campaign and user data, applies report labels/mobile
+exclusions and a date window starting at month start two months earlier. It is a
+current report snapshot, not a status-event fact table or SCD Type 2 model.
 
-Kafka Connect registers one Iceberg sink per source topic. Expected Raw tables include:
+The report's Gold table is native StarRocks storage, not a Gold Iceberg table.
+The REST catalog's SQLite state, MinIO files, Kafka logs and native serving tables
+all have distinct persistence needs. The [catalog](../decisions/006_local_catalog_and_probe_memory.md)
+and [Kafka storage](../decisions/007_kafka_log_storage.md) decisions document existing
+installation migration considerations.
 
-- `raw.customer_lead_cdc_connect`
-- `raw.customer_lead_icici_cdc_connect`
-- `raw.customer_lead_archived_cdc_connect`
-- `raw.customer_lead_purge_details_cdc_connect`
-- `raw.change_pincode_log_cdc_connect`
-- `raw.service_request_assign_log_cdc_connect`
-- `raw.service_request_assign_log_archieved_cdc_connect`
-- `raw.service_request_assign_log_purge_details_cdc_connect`
-- `raw.sr_status_update_log_cdc_connect`
-- `raw.sr_status_update_log_archieved_cdc_connect`
-- `raw.sr_status_update_log_purge_details_cdc_connect`
-- `raw.mas_pincode_cdc_connect`
-- `raw.mas_pincode_for_mis_hdfc_cdc_connect`
-- `raw.mst_campaign_leads_cdc_connect`
+## Scheduling, quality and scope
 
-## Initial Bulk Load and CDC Cutover
+The single task runs `dbt run` then `dbt test`, with zero automatic retries, no
+skip exit code, one active DAG run and a ten-minute DAG timeout. Stage logs name
+build/test success or the original failure status. Tests run after publication;
+there is no atomic swap or rollback. Direct builds must not overlap scheduled
+builds. [Recovery procedure](../runbooks/03_airflow_failures.md).
 
-For large client tables, use bulk initial load plus Debezium CDC cutover.
+The [six new quality tests](../runbooks/02_poc_execution.md#targeted-report-quality-checks)
+check physical lead grain, filtered Gold membership/multiplicity, optional-agent
+relationships and three required labels. Existing tests cover other selected
+keys and accepted labels; the CDC fixture covers source-order/delete cases.
 
-```text
-Enable CDC -> record export LSN/time -> bulk export existing rows
--> load snapshot rows into Raw Iceberg -> start Debezium from cutover point
--> build Silver/Gold -> validate against client totals
-```
+The current synthetic sample uses Debezium `snapshot.mode=initial`. Historical
+[bulk export/cutover planning](../decisions/004_initial_bulk_load_cdc_cutover.md)
+is not an implemented or benchmarked large-source ingestion path. The legacy
+PyIceberg writer targets the earlier smoke dataset, not a verified replacement
+for the fifteen-table report path; Spark is not deployed as a fallback.
 
-Why: a full Debezium initial snapshot can be too heavy for large production tables. Bulk export gives better throughput and validation, while CDC covers changes during and after the load.
-
-Proof: source export counts match Raw snapshot counts, CDC changes after cutover land in Raw, and `gold_daily_operations_report` reconciles with client-approved totals.
-
-Fallback: if bulk export is not available, use Debezium initial snapshot during an approved source-load window with sufficient CDC retention.
-
-## Avro and Schema Registry
-
-Kafka Connect uses Confluent Avro converters for keys and values.
-
-Why: Debezium emits strongly typed Kafka Connect schemas. Avro registers a versioned contract per table in Schema Registry, which is closer to a real client UAT/production solution than JSON-only messages.
-
-Proof: `health:source` checks Schema Registry subjects. DSB subjects should appear for topics like `EKYC_ICICI.dbo.Customer_Lead` and `EKYC_ICICI_Archived.dbo.SRStatusUpdateLog_archieved` under the configured Kafka topic prefix.
-
-## Silver Design
-
-Silver recreates the report views in dbt:
-
-- `silver_customer_lead_consolidated`
-- `silver_service_request_assign_log_consolidated`
-- `silver_sr_status_update_log_consolidated`
-- `silver_pincode_serviceability`
-- `silver_pincode_state_lookup`
-- `silver_campaign_leads`
-
-The lead Silver model uses latest-state interpretation per source row. The log Silver models preserve event/history rows because the Gold report needs to know whether status and assignment events happened.
-
-## Gold Design
-
-Gold model:
-
-- `gold_daily_operations_report`
-
-It applies the report joins, labels, and filters:
-
-- state lookup by current pincode
-- agent assignment by order number
-- serviceable/non-serviceable pincode flag
-- `RPush` versus `Fresh`
-- campaign priority flag
-- 2-month rolling created/updated date window
-- test mobile exclusion
-
-The Gold table lives in StarRocks internal catalog as `default_catalog.analytics.gold_daily_operations_report`.
-
-## Fallback Path
-
-If the Iceberg Kafka Connect sink blocks progress:
-
-```text
-Kafka -> Spark Structured Streaming or controlled PyIceberg writer -> Iceberg Raw on MinIO
-```
-
-The fallback must preserve the same Raw table contract so dbt Silver/Gold remains unchanged.
+No chatbot/LLM, new monitoring service, HA/DR or production IAM is added. Optional
+BI, EC2 and future public-demo work remain separate from this local project.

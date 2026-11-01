@@ -30,7 +30,7 @@ Run and document the five required failure scenarios.
 powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 failure:day6-safe
 ```
 
-- Individual commands live under [scripts/failure](C:\Users\caw-dev\Desktop\mbs\scripts\failure).
+- Individual commands live under [scripts/failure](../scripts/failure).
 - CDC retention exceeded and MinIO low-space tests remain manual/risk-gated by design.
 - Smoke command executed successfully with `-ConnectPauseSeconds 5 -StarRocksDownSeconds 5`.
 - Kafka Connect and StarRocks BE were confirmed running after the smoke test.

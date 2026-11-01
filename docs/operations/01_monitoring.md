@@ -1,5 +1,11 @@
 # Monitoring Operations
 
+Historical proposal, not a deployed stack. Current Compose does not install
+Prometheus, Grafana, Loki or a log collector. The implemented checks use connector
+task status, Raw/SQL queries and Airflow/dbt logs; see the
+[recovery guide](../runbooks/03_airflow_failures.md). The tools/dashboards below are
+older planning context and would need a new review before implementation.
+
 ## Purpose
 
 Provide lightweight POC observability without turning this work into a production monitoring project.

@@ -1,10 +1,15 @@
 # Seven-Day Milestones
 
+Historical milestone plan for the earlier client-oriented POC. This is not the
+current implementation checklist; use the [README](../../README.md) and
+[evidence index](../../evidence/README.md) for the personal project's actual scope
+and verified results. Targets below are not benchmark results.
+
 ## Day 1: Repo, SQL Server, CDC, Kafka Foundation
 
 Deliverables:
 
-- Scaffold exists under `C:\Users\caw-dev\Desktop\mbs`.
+- Scaffold exists at the repository root.
 - SQL Server 2019 running.
 - `mbs_poc`, `agents`, and `kyc_completions` created.
 - CDC enabled and verified on both tables.

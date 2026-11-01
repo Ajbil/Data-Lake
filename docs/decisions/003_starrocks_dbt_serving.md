@@ -4,6 +4,11 @@
 
 Accepted for Day 4 POC.
 
+Current implementation: Raw remains Iceberg on MinIO; Silver/Gold are native
+StarRocks tables. Airflow scheduling and nine models/32 tests are verified in
+[the evidence index](../../evidence/README.md). This clarifies the accepted design;
+it does not introduce Gold-on-Iceberg storage or a new serving engine.
+
 ## Decision
 
 Use StarRocks FE/BE as the SQL serving layer and `dbt-starrocks` for Silver and Gold transformations.
@@ -26,7 +31,7 @@ StarRocks reads Raw Iceberg tables from:
 
 PowerBI will connect to StarRocks through the MySQL protocol and query the Gold model, especially `analytics.gold_daily_operations_report`.
 
-Airflow will later run the dbt command every 5 minutes.
+Airflow now runs `dbt run` then `dbt test` every five minutes, with one active run.
 
 ## What Proves It Works
 

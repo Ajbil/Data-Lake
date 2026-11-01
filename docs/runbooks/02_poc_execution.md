@@ -1,93 +1,29 @@
-# POC Execution Runbook
+# POC execution checks and recovery
 
-## Purpose
+For the current local synthetic-data setup, follow the [README](../../README.md#run-locally-on-windows).
+It is the single setup sequence; the reference sections below cover data inventory,
+recovery and the checks added during the six-step cleanup. Use
+[the evidence index](../../evidence/README.md) for recorded results and
+[the Airflow guide](03_airflow_failures.md) for failed report runs.
 
-Run the Daily Operations Report POC end to end and collect evidence for acceptance.
+`bootstrap:report-sample` drops/recreates the sample tables and CDC instances.
+Use it only for a new disposable local dataset, never for daily recovery or an
+external/customer database. A working installation should use the README's daily
+checks and preserve its existing volumes, registrations and offsets.
 
-## Execution Order
+## Alternative runtimes and historical material
 
-1. Confirm `.env` points to the client DSB-SahiBnk UAT SQL Server and has the Debezium login.
-2. Start Kafka, Schema Registry, Kafka Connect, Kafka UI, MinIO, Iceberg REST, StarRocks, and Airflow services.
-3. For local testing only, run `bootstrap:report-sample` to create dummy `EKYC_ICICI` and `EKYC_ICICI_Archived` tables, seed data, and CDC. Do not run this on the client DSB-SahiBnk UAT server.
-4. Install the Confluent Avro converter plugin and restart Kafka Connect.
-5. Register Debezium SQL Server connector for DSB-SahiBnk `EKYC_ICICI` and `EKYC_ICICI_Archived`.
-6. Confirm Kafka topics and Schema Registry subjects for the DSB source tables.
-7. Install the Iceberg sink plugin and restart Kafka Connect.
-8. Register Raw Iceberg sink connectors for the DSB source topics.
-9. Confirm Raw Iceberg metadata and Parquet files appear under `lakehouse/warehouse/raw`.
-10. Configure StarRocks external Iceberg catalog.
-11. Run dbt Silver and Gold models.
-12. Enable Airflow DAG every 5 minutes.
-13. Connect PowerBI to StarRocks and point it at `analytics.gold_daily_operations_report`.
+The README uses dbt in the existing Airflow container. For the optional Windows
+host-Python route, create `.venv` with `bootstrap:python` before `bootstrap:dbt`,
+then use `run:dbt` only while scheduled report work is paused and drained.
+Those commands install the older fallback tooling as well.
 
-## Commands
-
-Ubuntu local test:
-
-```bash
-./scripts/setup.sh init
-./scripts/setup.sh start
-./scripts/setup.sh bootstrap:report-sample
-./scripts/setup.sh plugin:avro
-./scripts/setup.sh restart:connect
-./scripts/setup.sh register:source
-./scripts/setup.sh health:source
-./scripts/setup.sh plugin:iceberg
-./scripts/setup.sh restart:connect
-./scripts/setup.sh register:raw
-./scripts/setup.sh health:iceberg
-./scripts/setup.sh health:raw
-./scripts/setup.sh bootstrap:starrocks
-./scripts/setup.sh health:starrocks
-./scripts/setup.sh bootstrap:dbt
-./scripts/setup.sh run:dbt
-./scripts/setup.sh health:dbt
-```
-
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 init
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 start
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 bootstrap:report-sample
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 plugin:avro
-docker compose --env-file .env -f infra/docker-compose/docker-compose.yml restart kafka-connect
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 register:source
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 health:source
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 plugin:iceberg
-docker compose --env-file .env -f infra/docker-compose/docker-compose.yml restart kafka-connect
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 register:raw
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 health:iceberg
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 health:raw
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 bootstrap:starrocks
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 health:starrocks
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 bootstrap:dbt
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 run:dbt
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 health:dbt
-```
-
-Client UAT flow starts after `.env` has been changed to the DSB-SahiBnk SQL Server host and client-approved Debezium credentials:
-
-```bash
-./scripts/setup.sh start
-./scripts/setup.sh plugin:avro
-./scripts/setup.sh restart:connect
-./scripts/setup.sh register:source
-./scripts/setup.sh health:source
-./scripts/setup.sh plugin:iceberg
-./scripts/setup.sh restart:connect
-./scripts/setup.sh register:raw
-./scripts/setup.sh health:iceberg
-./scripts/setup.sh health:raw
-./scripts/setup.sh bootstrap:starrocks
-./scripts/setup.sh health:starrocks
-./scripts/setup.sh bootstrap:dbt
-./scripts/setup.sh run:dbt
-./scripts/setup.sh health:dbt
-```
-
-Never run `bootstrap:report-sample` in the client UAT flow.
-
+The Linux runner supports ingestion, StarRocks and local dbt commands; inspect
+`./scripts/setup.sh help` for its actual command set. It does not implement the
+Windows Airflow bootstrap/health or CDC-smoke commands. Linux/EC2 and external
+client integration were not revalidated by this cleanup. The bulk-export/client
+notes below preserve earlier planning and are not acceptance claims for the
+current synthetic demo.
 ## Expected Raw Tables
 
 ```text
@@ -105,6 +41,7 @@ raw.sr_status_update_log_purge_details_cdc_connect
 raw.mas_pincode_cdc_connect
 raw.mas_pincode_for_mis_hdfc_cdc_connect
 raw.mst_campaign_leads_cdc_connect
+raw.mbs_user_cdc_connect
 ```
 
 ## Expected dbt Tables
@@ -119,6 +56,7 @@ default_catalog.analytics.silver_sr_status_update_log_consolidated
 default_catalog.analytics.silver_pincode_serviceability
 default_catalog.analytics.silver_pincode_state_lookup
 default_catalog.analytics.silver_campaign_leads
+default_catalog.analytics.silver_mbs_user
 ```
 
 Gold:
@@ -311,13 +249,16 @@ StarRocks/dbt:
 - `dbt test` passes.
 - `SELECT COUNT(*) FROM default_catalog.analytics.gold_daily_operations_report` succeeds.
 
-PowerBI:
+PowerBI (optional manual acceptance checks, not current cleanup evidence):
 
 - PowerBI connects through StarRocks MySQL protocol.
 - Report uses `analytics.gold_daily_operations_report`.
-- Refresh completes within the 5-minute pipeline target after new eligible source changes arrive.
+- Optional historical BI target: measure refresh separately; the current cleanup does not establish five-minute source-to-BI freshness.
 
 ## Large Initial Load Path
+
+Historical client-source proposal, not an implemented or benchmarked path for
+the current synthetic demo. Current source registration uses an initial snapshot.
 
 For large client datasets, use bulk initial load plus CDC cutover instead of relying only on Debezium initial snapshot.
 
@@ -410,9 +351,10 @@ running, test the last completed Silver/Gold build using:
 docker exec -w /opt/airflow/dbt -e STARROCKS_DBT_HOST=starrocks-fe -e DBT_PROFILES_DIR=/opt/airflow/dbt mbs-airflow-scheduler /home/airflow/.local/bin/dbt test --select tag:quality
 ```
 
-Avoid concurrent table replacement: for a standalone check, pause the report DAG,
-allow running/queued work to finish, and restore the original pause state after
-testing. The scheduled task already tests after its own build.
+Avoid concurrent table replacement: allow queued work to finish while unpaused,
+then pause the report DAG and let any running task finish. Confirm no active runs
+remain and restore the original pause state after testing. Paused DAGs do not
+drain queued runs. The scheduled task already tests after its own build.
 
 | Check | Contract |
 | --- | --- |

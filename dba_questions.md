@@ -1,5 +1,9 @@
 # DBA Questions
 
+Historical questions for integrating an external/customer SQL Server. They are
+retained as source-contract context, not extra work required for the local
+synthetic portfolio demo. Current limitations are in [project risks](project_risks.md).
+
 ## CDC and Retention
 
 - Is 7-day CDC retention acceptable for the source database operationally?
